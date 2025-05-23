@@ -1,0 +1,19 @@
+# Rust/Cargo
+/target/
+**/*.rs.bk
+Cargo.lock            # omit this if you’re building a library; include it for binaries/apps
+
+# IDE/editor
+.vscode/
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+
+# Environment files
+.env
+.env.*
+
+# Generated images (if you don’t want to check them in)
+inscription_*.*

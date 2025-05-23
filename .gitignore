@@ -14,6 +14,3 @@ Cargo.lock            # omit this if you’re building a library; include it for
 # Environment files
 .env
 .env.*
-
-# Generated images (if you don’t want to check them in)
-inscription_*.*

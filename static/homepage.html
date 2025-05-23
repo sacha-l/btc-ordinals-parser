@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitcoin Inscription Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'MS Sans Serif', sans-serif;
+            background: #c0c0c0;
+            min-height: 100vh;
+            padding: 20px;
+            background-image: 
+                radial-gradient(circle at 50% 50%, #d0d0d0 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .container {
+            background: #c0c0c0;
+            border: 2px outset #c0c0c0;
+            padding: 10px;
+            max-width: 800px;
+            margin: 0 auto;
+            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .title-bar {
+            background: linear-gradient(90deg, #000080 0%, #0000ff 100%);
+            color: white;
+            padding: 4px 8px;
+            margin: -10px -10px 10px -10px;
+            font-size: 11px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 2px;
+        }
+
+        .window-btn {
+            width: 16px;
+            height: 14px;
+            background: #c0c0c0;
+            border: 1px outset #c0c0c0;
+            font-size: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .window-btn:active {
+            border: 1px inset #c0c0c0;
+        }
+
+        h1 {
+            text-align: center;
+            color: #000080;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 1px 1px 0px #ffffff;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 2px inset #c0c0c0;
+            background: #f0f0f0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #000000;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 3px;
+            border: 2px inset #c0c0c0;
+            font-size: 11px;
+            font-family: 'MS Sans Serif', sans-serif;
+            background: white;
+        }
+
+        input[type="text"]:focus {
+            outline: 1px dotted #000000;
+            outline-offset: -3px;
+        }
+
+        .btn {
+            background: #c0c0c0;
+            border: 2px outset #c0c0c0;
+            padding: 6px 16px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: 'MS Sans Serif', sans-serif;
+            color: #000000;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            background: #d0d0d0;
+        }
+
+        .btn:active {
+            border: 2px inset #c0c0c0;
+        }
+
+        .btn:disabled {
+            color: #808080;
+            cursor: default;
+            background: #c0c0c0;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+            padding: 10px;
+            border: 2px inset #c0c0c0;
+            background: #f0f0f0;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            margin: 0 auto 10px;
+            background: #c0c0c0;
+            border: 2px inset #c0c0c0;
+            animation: blink 1s linear infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { background: #c0c0c0; }
+            51%, 100% { background: #808080; }
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 2px inset #c0c0c0;
+            display: none;
+            background: #f0f0f0;
+        }
+
+        .success {
+            background: #f0f0f0;
+            border: 2px inset #c0c0c0;
+        }
+
+        .error {
+            background: #f0f0f0;
+            border: 2px inset #c0c0c0;
+        }
+
+        .result h3 {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #000080;
+        }
+
+        .image-container {
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            border: 2px inset #c0c0c0;
+            background: white;
+        }
+
+        .inscription-image {
+            max-width: 100%;
+            max-height: 400px;
+            border: 1px solid #808080;
+            image-rendering: pixelated;
+        }
+
+        .info-grid {
+            display: block;
+            margin-top: 15px;
+        }
+
+        .info-item {
+            background: white;
+            padding: 8px;
+            margin-bottom: 5px;
+            border: 1px inset #c0c0c0;
+            font-size: 11px;
+        }
+
+        .info-label {
+            font-weight: bold;
+            margin-bottom: 3px;
+            color: #000080;
+        }
+
+        .info-value {
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+            font-size: 10px;
+            background: #ffffff;
+            padding: 2px;
+            border: 1px inset #c0c0c0;
+        }
+
+        .example-tx {
+            background: #ffffcc;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 2px inset #c0c0c0;
+        }
+
+        .example-tx h3 {
+            color: #000080;
+            margin-bottom: 5px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .example-tx p {
+            font-size: 10px;
+            margin-bottom: 5px;
+        }
+
+        .example-link {
+            color: #000080;
+            text-decoration: underline;
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            cursor: pointer;
+            display: block;
+            background: white;
+            padding: 2px;
+            border: 1px inset #c0c0c0;
+            word-break: break-all;
+        }
+
+        .example-link:hover {
+            background: #000080;
+            color: white;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            border: 2px inset #c0c0c0;
+            background: #f0f0f0;
+            margin: 10px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #000080;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .status-bar {
+            background: #c0c0c0;
+            border: 1px inset #c0c0c0;
+            padding: 2px 8px;
+            font-size: 10px;
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .menu-bar {
+            background: #c0c0c0;
+            border-bottom: 1px solid #808080;
+            padding: 2px;
+            margin: -10px -10px 10px -10px;
+            font-size: 11px;
+        }
+
+        .menu-item {
+            display: inline-block;
+            padding: 2px 8px;
+            cursor: pointer;
+        }
+
+        .menu-item:hover {
+            background: #000080;
+            color: white;
+        }
+
+        /* Classic scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 16px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #c0c0c0;
+            border: 2px inset #c0c0c0;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #c0c0c0;
+            border: 2px outset #c0c0c0;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a0a0a0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title-bar">
+            <span>Bitcoin Inscription Viewer v1.0</span>
+            <div class="window-controls">
+                <div class="window-btn">_</div>
+                <div class="window-btn">□</div>
+                <div class="window-btn">×</div>
+            </div>
+        </div>
+        
+        <div class="menu-bar">
+            <span class="menu-item">File</span>
+            <span class="menu-item">Edit</span>
+            <span class="menu-item">View</span>
+            <span class="menu-item">Tools</span>
+            <span class="menu-item">Help</span>
+        </div>
+        
+        <h1>Bitcoin Inscription Viewer</h1>
+        
+        <div class="example-tx">
+            <h3>Example Transaction:</h3>
+            <p>Try this transaction that contains an image inscription or got to  <url>https://memepool.space/</url> to find one:</p>
+            <span class="example-link" onclick="fillExample()">
+                4b19c8b5c02051fa526a55c1a9ed0cf2bd9f172aa814ae45188f8638e2298423
+            </span>
+        </div>
+
+        <form id="inscriptionForm">
+            <div class="input-group">
+                <label for="txid">Bitcoin Transaction ID (TXID):</label>
+                <input 
+                    type="text" 
+                    id="txid" 
+                    name="txid" 
+                    placeholder="Enter Bitcoin transaction ID (64 characters hex)"
+                    pattern="[a-fA-F0-9]{64}"
+                    required
+                >
+            </div>
+            <button type="submit" class="btn" id="submitBtn">
+                Find Inscription
+            </button>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Processing transaction...</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <div class="result" id="result">
+            <!-- Results will be displayed here -->
+        </div>
+        
+        <div class="status-bar">
+            <span>Ready</span>
+            <span id="statusText">Enter transaction ID to begin</span>
+        </div>
+    </div>
+
+    <script>
+        // Mock data for demonstration - replace with actual API calls
+        const mockInscriptions = {
+            "4b19c8b5c02051fa526a55c1a9ed0cf2bd9f172aa814ae45188f8638e2298423": {
+                content_type: "image/png",
+                content_length: 2086,
+                data_url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
+            }
+        };
+
+        function fillExample() {
+            document.getElementById('txid').value = '4b19c8b5c02051fa526a55c1a9ed0cf2bd9f172aa814ae45188f8638e2298423';
+        }
+
+        async function fetchInscription(txid) {
+            const response = await fetch(`/api/inscription/${txid}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                return data;
+            } else {
+                throw new Error(data.error);
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('statusText').textContent = 'Fetching transaction data...';
+            
+            // Simulate progress bar
+            let progress = 0;
+            const progressBar = document.getElementById('progressFill');
+            const interval = setInterval(() => {
+                progress += 5;
+                progressBar.style.width = progress + '%';
+                if (progress >= 100) {
+                    clearInterval(interval);
+                }
+            }, 100);
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('submitBtn').disabled = false;
+            document.getElementById('progressFill').style.width = '0%';
+        }
+
+        function showSuccess(inscription, txid) {
+            const result = document.getElementById('result');
+            result.className = 'result success';
+            result.style.display = 'block';
+            // smooth‐scroll to “open” the result panel
+            result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            document.getElementById('statusText').textContent = 'Inscription found successfully';
+
+            const isImage = inscription.content_type.startsWith('image/');
+            
+            result.innerHTML = `
+                <h3>Inscription Found!</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Content Type:</div>
+                        <div class="info-value">${inscription.content_type}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Content Size:</div>
+                        <div class="info-value">${inscription.content_length || 'Unknown'} bytes</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Transaction ID:</div>
+                        <div class="info-value">${txid}</div>
+                    </div>
+                </div>
+                ${isImage ? `
+                    <div class="image-container">
+                        <img src="${inscription.data_url}" alt="Bitcoin Inscription" class="inscription-image">
+                    </div>
+                ` : `
+                    <div class="image-container">
+                        <p>Non-image content found. Content type: ${inscription.content_type}</p>
+                    </div>
+                `}
+            `;
+        }
+
+        function showError(message) {
+            const result = document.getElementById('result');
+            result.className = 'result error';
+            result.style.display = 'block';
+            document.getElementById('statusText').textContent = 'Error occurred';
+            result.innerHTML = `
+                <h3>Error</h3>
+                <p>${message}</p>
+                <p>Make sure the transaction ID is valid and contains an inscription.</p>
+            `;
+        }
+
+        document.getElementById('inscriptionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const txid = document.getElementById('txid').value.trim();
+            
+            if (!txid) {
+                showError('Please enter a transaction ID');
+                return;
+            }
+
+            if (!/^[a-fA-F0-9]{64}$/.test(txid)) {
+                showError('Invalid transaction ID format. Must be 64 hexadecimal characters.');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const inscription = await fetchInscription(txid);
+                showSuccess(inscription, txid);
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Add input validation
+        document.getElementById('txid').addEventListener('input', (e) => {
+            const value = e.target.value;
+            const isValid = /^[a-fA-F0-9]*$/.test(value) && value.length <= 64;
+            
+            if (!isValid && value.length > 0) {
+                e.target.style.borderColor = '#fc8181';
+            } else {
+                e.target.style.borderColor = '#e2e8f0';
+            }
+        });
+    </script>
+</body>
+</html>
